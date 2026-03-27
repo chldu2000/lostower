@@ -11,13 +11,16 @@ lostower is a terminal-based e-book reader (TUI application) written in Rust usi
 ## Current State
 
 - **Basic TUI Framework**: Implemented using Ratatui and Crossterm
-- **Views**: Library, Reader, and Help views are stubbed
+- **Views**: Library (file browser), Reader (book display), and Help views fully implemented
+- **TXT File Support**: Full support with charset decoding (UTF-8, GB2312, GBK, GB18030)
 - **Key Bindings**:
   - `q` - Quit
   - `h` - Show help
   - `l` - Library view
   - `r` - Reader view
-- **Dependencies**: ratatui, crossterm, anyhow, thiserror
+  - In Library: `j/k` or arrows to navigate, Enter to open book
+  - In Reader: `j/k/PageUp/PageDown` for pages, `c` to cycle charset
+- **Dependencies**: ratatui, crossterm, anyhow, thiserror, encoding_rs
 
 ## Development Commands
 
@@ -66,32 +69,32 @@ src/
 ├── main.rs                 # Application entry point
 ├── app/
 │   ├── mod.rs             # App module exports
-│   ├── state.rs           # Application state management
-│   └── settings.rs        # User settings and configuration
+│   ├── state.rs           # Application state management (with book and charset tracking)
+│   └── settings.rs        # User settings and configuration (stub)
 ├── tui/
 │   ├── mod.rs             # TUI module exports
 │   ├── event.rs           # Event handling (keyboard, mouse, resize)
 │   ├── ui/
 │   │   ├── mod.rs         # UI module exports
-│   │   ├── reader.rs      # Book reader view
-│   │   ├── library.rs     # Library view
-│   │   └── help.rs        # Help view
+│   │   ├── reader.rs      # Book reader view (with page navigation and charset cycling)
+│   │   ├── library.rs     # Library view (file browser with book selection)
+│   │   └── help.rs        # Help view (with charset info)
 │   └── components/
 │       ├── mod.rs         # Components module exports
 │       ├── scrollbar.rs   # Scrollbar component (stub)
 │       └── status_bar.rs  # Status bar component (stub)
 ├── book/
 │   ├── mod.rs             # Book module exports
-│   ├── parser.rs          # Book parser trait and factory (stub)
+│   ├── parser.rs          # Book parser trait and factory
 │   ├── formats/
 │   │   ├── mod.rs         # Formats module exports
-│   │   ├── txt.rs         # TXT format parser (stub)
+│   │   ├── txt.rs         # TXT format parser (full implementation with charset support)
 │   │   ├── epub.rs        # EPUB format parser (stub)
 │   │   └── mobi.rs        # MOBI format parser (stub)
-│   └── content.rs         # Book content representation (stub)
+│   └── content.rs         # Book content representation
 └── utils/
     ├── mod.rs             # Utils module exports
-    └── path.rs            # File path utilities (stub)
+    └── path.rs            # File path utilities
 ```
 
 ### Key Components
@@ -140,37 +143,44 @@ src/
 
 **Verification**: Run the app, see a basic terminal UI, press 'h' for help, 'q' to quit.
 
-#### Phase 2: File I/O and TXT Parser (Next Step)
+#### Phase 2: File I/O and TXT Parser ✅
 
-**Goal**: Add ability to load and display simple TXT files.
+**Goal**: Add ability to load and display simple TXT files with charset support.
 
-- [ ] Add dependencies:
-  - (No new dependencies needed for TXT)
+- [x] Add dependencies:
+  - [x] `encoding_rs` (0.8.35) for charset decoding
 
-- [ ] Implement book content representation:
-  - [ ] `src/book/content.rs` - Structs for book metadata and content
+- [x] Implement book content representation:
+  - [x] `src/book/content.rs` - Structs for book metadata and content
 
-- [ ] Implement parser trait:
-  - [ ] `src/book/parser.rs` - `BookParser` trait with factory
+- [x] Implement parser trait:
+  - [x] `src/book/parser.rs` - `BookParser` trait with factory
 
-- [ ] Implement TXT parser:
-  - [ ] `src/book/formats/txt.rs` - TXT format parser implementation
+- [x] Implement TXT parser:
+  - [x] `src/book/formats/txt.rs` - TXT format parser with charset support (UTF-8, GB2312, GBK, GB18030)
 
-- [ ] Add file I/O utilities:
-  - [ ] `src/utils/path.rs` - File path handling helpers
+- [x] Add file I/O utilities:
+  - [x] `src/utils/path.rs` - File path handling helpers
 
-- [ ] Implement library view:
-  - [ ] `src/tui/ui/library.rs` - File browser to select books
+- [x] Implement library view:
+  - [x] `src/tui/ui/library.rs` - File browser to select books
 
-- [ ] Implement reader view:
-  - [ ] `src/tui/ui/reader.rs` - Display book content with scrolling
+- [x] Implement reader view:
+  - [x] `src/tui/ui/reader.rs` - Display book content with scrolling and page navigation
 
-- [ ] Update app state:
-  - [ ] Track loaded book
-  - [ ] Track reading position
-  - [ ] Switch between views (library/reader/help)
+- [x] Update app state:
+  - [x] Track loaded book
+  - [x] Track current charset
+  - [x] Implement `cycle_charset()` function
+  - [x] Switch between views (library/reader/help)
 
-**Verification**: Run the app, browse to a TXT file, open it, read and scroll through content.
+**Additional Features**:
+
+- Charset decoding support for multiple encodings
+- Charset cycling with 'c' key
+- Enhanced help view showing current charset
+
+**Verification**: Run the app, browse to a TXT file, open it, read and scroll through content. Press 'c' to cycle through charsets!
 
 #### Phase 3: EPUB Support
 

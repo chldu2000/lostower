@@ -77,37 +77,58 @@ src/
 
 **Verification**: Run the app, see a basic terminal UI, press 'h' for help, 'q' to quit.
 
-### Phase 2: File I/O and TXT Parser
+### Phase 2: File I/O and TXT Parser ✅
 
-**Goal**: Add ability to load and display simple TXT files.
+**Goal**: Add ability to load and display simple TXT files with charset support.
 
-- [ ] Add dependencies:
-  - (No new dependencies needed for TXT)
+- [x] Add dependencies:
+  - [x] `encoding_rs` (0.8.35) for charset decoding (UTF-8, GB2312, GBK, GB18030)
 
-- [ ] Implement book content representation:
-  - [ ] `src/book/content.rs` - Structs for book metadata and content
+- [x] Implement book content representation:
+  - [x] `src/book/content.rs` - Structs for book metadata and content
 
-- [ ] Implement parser trait:
-  - [ ] `src/book/parser.rs` - `BookParser` trait with factory
+- [x] Implement parser trait:
+  - [x] `src/book/parser.rs` - `BookParser` trait with factory
+  - [x] `BookParserFactory::create_parser()` for general parsers
+  - [x] `BookParserFactory::create_txt_parser_with_charset()` for charset-specific TXT parsing
 
-- [ ] Implement TXT parser:
-  - [ ] `src/book/formats/txt.rs` - TXT format parser implementation
+- [x] Implement TXT parser:
+  - [x] `src/book/formats/txt.rs` - TXT format parser implementation
+  - [x] Charset enum (UTF-8, GB2312, GBK, GB18030)
+  - [x] Encoding/decoding support using `encoding_rs`
+  - [x] Page splitting (50 lines per page)
+  - [x] Charset cycling support
+  - [x] Unit tests for all functionality
 
-- [ ] Add file I/O utilities:
-  - [ ] `src/utils/path.rs` - File path handling helpers
+- [x] Add file I/O utilities:
+  - [x] `src/utils/path.rs` - File path handling helpers
+  - [x] `read_file_bytes()` for reading raw file contents
+  - [x] `list_books_in_directory()` for discovering books
+  - [x] `file_name_without_extension()` and `file_extension()
 
-- [ ] Implement library view:
-  - [ ] `src/tui/ui/library.rs` - File browser to select books
+- [x] Implement library view:
+  - [x] `src/tui/ui/library.rs` - File browser to select books
+  - [x] Navigation with j/k or arrow keys
+  - [x] Enter key to open a selected book
 
-- [ ] Implement reader view:
-  - [ ] `src/tui/ui/reader.rs` - Display book content with scrolling
+- [x] Implement reader view:
+  - [x] `src/tui/ui/reader.rs` - Display book content with scrolling
+  - [x] Page navigation with j/k/PageUp/PageDown
+  - [x] 'c' key to cycle through charsets
 
-- [ ] Update app state:
-  - [ ] Track loaded book
-  - [ ] Track reading position
-  - [ ] Switch between views (library/reader/help)
+- [x] Update app state:
+  - [x] Track loaded book (`current_book: Option<Book>`)
+  - [x] Track current charset (`current_charset: Charset`)
+  - [x] `cycle_charset()` method for charset switching
+  - [x] `load_book()` method to load a book and switch views
 
-**Verification**: Run the app, browse to a TXT file, open it, read and scroll through content.
+**Additional Features Implemented**:
+
+- Charset decoding support for multiple encodings (UTF-8, GB2312, GBK, GB18030)
+- Charset cycling in reader view
+- Enhanced help view showing current charset
+
+**Verification**: Run the app, browse to a TXT file, open it, read and scroll through content. Press 'c' to cycle through charsets!
 
 ### Phase 3: EPUB Support
 
