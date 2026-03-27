@@ -97,8 +97,11 @@ fn handle_key_event(
                                 };
 
                                 if let Ok(mut book) = parser.parse(&content) {
-                                    let title = utils::path::file_name_without_extension(book_path);
-                                    book.metadata.title = title;
+                                    // Only set title from filename for TXT files (which don't have metadata)
+                                    if parser_type == book::parser::ParserType::Txt {
+                                        let title = utils::path::file_name_without_extension(book_path);
+                                        book.metadata.title = title;
+                                    }
                                     state.load_book(book);
                                     reader.current_page = 0;
                                 }

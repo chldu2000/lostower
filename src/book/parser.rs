@@ -28,7 +28,7 @@ impl BookParserFactory {
     pub fn create_parser(parser_type: ParserType) -> Box<dyn BookParser> {
         match parser_type {
             ParserType::Txt => Box::new(crate::book::formats::txt::TxtParser::new()),
-            ParserType::Epub => unimplemented!("EPUB parser not implemented yet"),
+            ParserType::Epub => Box::new(crate::book::formats::epub::EpubParser::new()),
             ParserType::Mobi => unimplemented!("MOBI parser not implemented yet"),
         }
     }
