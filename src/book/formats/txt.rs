@@ -78,10 +78,9 @@ impl BookParser for TxtParser {
             format: "txt".to_string(),
         };
 
-        let pages = self.split_into_pages(&text);
-        let content = BookContent::new(pages);
+        let book_content = BookContent::new(text);
 
-        Ok(Book::new(metadata, content))
+        Ok(Book::new(metadata, book_content))
     }
 }
 
@@ -92,16 +91,6 @@ impl TxtParser {
             eprintln!("Warning: Some characters could not be decoded with {}", self.charset.name());
         }
         cow.to_string()
-    }
-
-    fn split_into_pages(&self, text: &str) -> Vec<String> {
-        // Simple page splitting: split by newlines or every 50 lines
-        let lines_per_page = 50;
-        let lines: Vec<&str> = text.split('\n').collect();
-
-        lines.chunks(lines_per_page)
-            .map(|chunk| chunk.join("\n"))
-            .collect()
     }
 }
 
@@ -116,11 +105,10 @@ mod tests {
         let book = parser.parse(test_content).expect("Failed to parse TXT content");
 
         assert_eq!(book.metadata.format, "txt");
-        assert!(book.content.page_count() > 0);
     }
 
     #[test]
-    fn test_txt_parser_split_pages() {
+    fn test_txt_parser_split_pages_dynamic() {
         let parser = TxtParser::new();
         let mut test_content = Vec::new();
         for i in 1..=100 {
@@ -130,7 +118,12 @@ mod tests {
         let test_content_bytes = joined_content.as_bytes();
 
         let book = parser.parse(test_content_bytes).expect("Failed to parse TXT content");
-        assert_eq!(book.content.page_count(), 2); // 100 lines / 50 lines per page
+
+        // Test different page heights
+        assert_eq!(book.content.page_count_for_height(50), 2); // 100 lines / 50 lines per page
+        assert_eq!(book.content.page_count_for_height(25), 4); // 100 lines / 25 lines per page
+        assert_eq!(book.content.page_count_for_height(100), 1); // 100 lines / 100 lines per page
+        assert_eq!(book.content.page_count_for_height(75), 2); // 100 lines / 75 lines per page (with remainder)
     }
 
     #[test]
@@ -139,8 +132,7 @@ mod tests {
         let test_content = b"";
         let book = parser.parse(test_content).expect("Failed to parse TXT content");
 
-        assert_eq!(book.content.page_count(), 1); // Should have at least one page
-        assert!(book.content.get_page(0).unwrap().is_empty());
+        assert_eq!(book.content.full_text, "");
     }
 
     #[test]

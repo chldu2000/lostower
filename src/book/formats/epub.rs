@@ -10,16 +10,6 @@ impl EpubParser {
     pub fn new() -> Self {
         Self
     }
-
-    fn split_into_pages(&self, text: &str) -> Vec<String> {
-        // Use the same page splitting method as TXT parser: 50 lines per page
-        let lines_per_page = 50;
-        let lines: Vec<&str> = text.split('\n').collect();
-
-        lines.chunks(lines_per_page)
-            .map(|chunk| chunk.join("\n"))
-            .collect()
-    }
 }
 
 impl Default for EpubParser {
@@ -59,16 +49,8 @@ impl BookParser for EpubParser {
             }
         }
 
-        // Combine all content into a single string and split into pages
+        // Combine all content into a single string
         let full_text = all_content.join("\n\n");
-        let pages = self.split_into_pages(&full_text);
-
-        // If no pages were extracted, add at least one page
-        let final_pages = if pages.is_empty() {
-            vec!["No readable content found in EPUB.".to_string()]
-        } else {
-            pages
-        };
 
         let metadata = BookMetadata {
             title,
@@ -76,7 +58,7 @@ impl BookParser for EpubParser {
             format: "epub".to_string(),
         };
 
-        let book_content = BookContent::new(final_pages);
+        let book_content = BookContent::new(full_text);
 
         Ok(Book::new(metadata, book_content))
     }
@@ -90,46 +72,5 @@ mod tests {
     fn test_epub_parser_basic() {
         let _parser = EpubParser::new();
         assert!(true);
-    }
-
-    #[test]
-    fn test_epub_parser_page_splitting() {
-        let parser = EpubParser::new();
-        let mut long_text = Vec::new();
-        for i in 1..=100 {
-            long_text.push(format!("Line {}", i));
-        }
-        let test_content = long_text.join("\n");
-
-        let pages = parser.split_into_pages(&test_content);
-
-        // 100 lines should be split into 2 pages of 50 lines each
-        assert_eq!(pages.len(), 2);
-    }
-
-    #[test]
-    fn test_epub_parser_page_splitting_short() {
-        let parser = EpubParser::new();
-        let test_content = "Line 1\nLine 2\nLine 3";
-
-        let pages = parser.split_into_pages(test_content);
-
-        // Short content should be one page
-        assert_eq!(pages.len(), 1);
-    }
-
-    #[test]
-    fn test_epub_parser_page_splitting_exact() {
-        let parser = EpubParser::new();
-        let mut long_text = Vec::new();
-        for i in 1..=50 {
-            long_text.push(format!("Line {}", i));
-        }
-        let test_content = long_text.join("\n");
-
-        let pages = parser.split_into_pages(&test_content);
-
-        // Exactly 50 lines should be one page
-        assert_eq!(pages.len(), 1);
     }
 }
