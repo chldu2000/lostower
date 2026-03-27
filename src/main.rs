@@ -17,7 +17,7 @@ mod utils;
 
 use app::{AppState, View};
 use tui::event::{Event, EventHandler};
-use tui::ui;
+use tui::ui::{library::Library, reader::Reader, help::Help};
 
 fn main() -> anyhow::Result<()> {
     // Setup terminal
@@ -29,6 +29,8 @@ fn main() -> anyhow::Result<()> {
 
     // Create app state
     let mut state = AppState::new();
+    let mut library = Library::new();
+    let mut reader = Reader::new();
 
     // Setup event handler
     let tick_rate = Duration::from_millis(250);
@@ -37,11 +39,22 @@ fn main() -> anyhow::Result<()> {
     // Main loop
     while !state.should_quit {
         // Draw UI
-        terminal.draw(|frame| ui::render(frame, &state))?;
+        terminal.draw(|frame| {
+            match state.current_view {
+                View::Library => Library::render(frame, &state, &mut library),
+                View::Reader => Reader::render(frame, &state, &mut reader),
+                View::Help => Help::render(frame, &state),
+            }
+        })?;
 
         // Handle events
         match events.next()? {
-            Event::Key(key_event) => handle_key_event(&mut state, key_event),
+            Event::Key(key_event) => handle_key_event(
+                &mut state,
+                key_event,
+                &mut library,
+                &mut reader
+            ),
             Event::Mouse(_mouse_event) => {}
             Event::Resize(_width, _height) => {}
             Event::Tick => {}
@@ -59,12 +72,86 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn handle_key_event(state: &mut AppState, key_event: crossterm::event::KeyEvent) {
-    match key_event.code {
-        KeyCode::Char('q') => state.quit(),
-        KeyCode::Char('h') => state.switch_view(View::Help),
-        KeyCode::Char('l') => state.switch_view(View::Library),
-        KeyCode::Char('r') => state.switch_view(View::Reader),
-        _ => {}
+fn handle_key_event(
+    state: &mut AppState,
+    key_event: crossterm::event::KeyEvent,
+    library: &mut Library,
+    reader: &mut Reader
+) {
+    match state.current_view {
+        View::Library => {
+            match key_event.code {
+                KeyCode::Char('q') => state.quit(),
+                KeyCode::Char('h') => state.switch_view(View::Help),
+                KeyCode::Down | KeyCode::Char('j') => library.next(),
+                KeyCode::Up | KeyCode::Char('k') => library.previous(),
+                KeyCode::Enter => {
+                    if let Some(book_path) = library.get_selected_book() {
+                        if let Ok(content) = utils::path::read_file_bytes(book_path) {
+                            let extension = utils::path::file_extension(book_path);
+                            if let Some(parser_type) = book::parser::ParserType::from_extension(&extension) {
+                                let parser = if parser_type == book::parser::ParserType::Txt {
+                                    book::parser::BookParserFactory::create_txt_parser_with_charset(state.current_charset)
+                                } else {
+                                    book::parser::BookParserFactory::create_parser(parser_type)
+                                };
+
+                                if let Ok(mut book) = parser.parse(&content) {
+                                    let title = utils::path::file_name_without_extension(book_path);
+                                    book.metadata.title = title;
+                                    state.load_book(book);
+                                    reader.current_page = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        View::Reader => {
+            match key_event.code {
+                KeyCode::Char('q') => state.quit(),
+                KeyCode::Char('h') => state.switch_view(View::Help),
+                KeyCode::Char('l') => state.switch_view(View::Library),
+                KeyCode::Down | KeyCode::Char('j') | KeyCode::PageDown => {
+                    if let Some(book) = &state.current_book {
+                        reader.next_page(book);
+                    }
+                }
+                KeyCode::Up | KeyCode::Char('k') | KeyCode::PageUp => {
+                    reader.previous_page();
+                }
+                KeyCode::Char('c') => {
+                    state.cycle_charset();
+                    if let Some(book_path) = library.get_selected_book() {
+                        if let Ok(content) = utils::path::read_file_bytes(book_path) {
+                            let extension = utils::path::file_extension(book_path);
+                            if let Some(parser_type) = book::parser::ParserType::from_extension(&extension) {
+                                if parser_type == book::parser::ParserType::Txt {
+                                    let parser = book::parser::BookParserFactory::create_txt_parser_with_charset(state.current_charset);
+                                    if let Ok(mut book) = parser.parse(&content) {
+                                        let title = utils::path::file_name_without_extension(book_path);
+                                        book.metadata.title = title;
+                                        state.load_book(book);
+                                        reader.current_page = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        View::Help => {
+            match key_event.code {
+                KeyCode::Char('q') => state.quit(),
+                KeyCode::Char('l') => state.switch_view(View::Library),
+                KeyCode::Char('r') => state.switch_view(View::Reader),
+                KeyCode::Esc => state.switch_view(View::Library),
+                _ => {}
+            }
+        }
     }
 }

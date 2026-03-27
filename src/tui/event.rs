@@ -14,7 +14,6 @@ pub enum Event {
 }
 
 pub struct EventHandler {
-    sender: mpsc::Sender<Event>,
     receiver: mpsc::Receiver<Event>,
 }
 
@@ -22,7 +21,7 @@ impl EventHandler {
     pub fn new(tick_rate: Duration) -> Self {
         let (sender, receiver) = mpsc::channel();
 
-        let tick_sender = sender.clone();
+        let event_sender = sender.clone();
         thread::spawn(move || {
             let mut last_tick = Instant::now();
             loop {
@@ -33,23 +32,23 @@ impl EventHandler {
                 if event::poll(timeout).expect("no events available") {
                     match event::read().expect("unable to read event") {
                         CrosstermEvent::Key(e) if e.kind == KeyEventKind::Press => {
-                            sender.send(Event::Key(e))
+                            event_sender.send(Event::Key(e))
                         }
-                        CrosstermEvent::Mouse(e) => sender.send(Event::Mouse(e)),
-                        CrosstermEvent::Resize(w, h) => sender.send(Event::Resize(w, h)),
+                        CrosstermEvent::Mouse(e) => event_sender.send(Event::Mouse(e)),
+                        CrosstermEvent::Resize(w, h) => event_sender.send(Event::Resize(w, h)),
                         _ => Ok(()),
                     }
                     .expect("failed to send terminal event");
                 }
 
                 if last_tick.elapsed() >= tick_rate {
-                    tick_sender.send(Event::Tick).expect("failed to send tick event");
+                    event_sender.send(Event::Tick).expect("failed to send tick event");
                     last_tick = Instant::now();
                 }
             }
         });
 
-        Self { sender, receiver }
+        Self { receiver }
     }
 
     pub fn next(&self) -> Result<Event, mpsc::RecvError> {

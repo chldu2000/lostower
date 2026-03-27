@@ -1,5 +1,4 @@
 use ratatui::{
-    layout::Rect,
     widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
 };
@@ -9,19 +8,22 @@ use crate::app::AppState;
 pub struct Help;
 
 impl Help {
-    pub fn render(frame: &mut Frame, _state: &AppState) {
+    pub fn render(frame: &mut Frame, state: &AppState) {
         let area = frame.area();
 
         let block = Block::default()
             .title("Help")
             .borders(Borders::ALL);
 
-        let help_text = vec![
+        let help_text = [
             "Key Bindings:",
             "  q - Quit",
             "  h - Show this help",
             "  l - Library view",
             "  r - Reader view",
+            "  c - Cycle charset (UTF-8 → GB2312 → GBK → GB18030)",
+            "",
+            &format!("Current Charset: {}", state.current_charset.name()),
             "",
             "lostower - Terminal E-book Reader",
         ];
