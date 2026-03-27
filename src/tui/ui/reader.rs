@@ -6,15 +6,15 @@ use ratatui::{
 use crate::app::AppState;
 
 pub struct Reader {
-    pub current_line: usize,      // Track current line instead of page
-    pub lines_per_page: usize,   // Store last known lines per page
+    pub scroll_offset: usize,
+    pub last_known_height: u16,
 }
 
 impl Reader {
     pub fn new() -> Self {
         Self {
-            current_line: 0,
-            lines_per_page: 50, // Default until we know terminal size
+            scroll_offset: 0,
+            last_known_height: 52, // Default with borders
         }
     }
 
@@ -29,22 +29,23 @@ impl Reader {
         }
     }
 
-    pub fn scroll_down(&mut self, book: &crate::book::content::Book) {
-        let total_lines: usize = book.content.full_text.split('\n').count();
-        let max_line = total_lines.saturating_sub(1);
-
-        // Scroll down by 1 page
-        self.current_line = std::cmp::min(self.current_line + self.lines_per_page, max_line);
+    pub fn scroll_down(&mut self) {
+        let lines_per_page = Self::calculate_lines_per_page(self.last_known_height);
+        self.scroll_offset += lines_per_page;
     }
 
     pub fn scroll_up(&mut self) {
-        // Scroll up by 1 page
-        self.current_line = self.current_line.saturating_sub(self.lines_per_page);
+        let lines_per_page = Self::calculate_lines_per_page(self.last_known_height);
+        if lines_per_page > self.scroll_offset {
+            self.scroll_offset = 0;
+        } else {
+            self.scroll_offset -= lines_per_page;
+        }
     }
 
     pub fn render(frame: &mut Frame, state: &AppState, reader: &mut Reader) {
         let area = frame.area();
-        reader.lines_per_page = Self::calculate_lines_per_page(area.height);
+        reader.last_known_height = area.height;
 
         let block = Block::default()
             .title("Reader")
@@ -52,21 +53,11 @@ impl Reader {
 
         match &state.current_book {
             Some(book) => {
-                let all_lines: Vec<&str> = book.content.full_text.split('\n').collect();
-                let start_line = reader.current_line;
-                let end_line = std::cmp::min(start_line + reader.lines_per_page, all_lines.len());
-
-                let visible_lines = if start_line < all_lines.len() {
-                    &all_lines[start_line..end_line]
-                } else {
-                    &[]
-                };
-
-                let page_content = visible_lines.join("\n");
-
-                let paragraph = Paragraph::new(page_content)
+                let paragraph = Paragraph::new(book.content.full_text.as_str())
                     .block(block)
-                    .wrap(Wrap { trim: true });
+                    .wrap(Wrap { trim: true })
+                    .scroll((reader.scroll_offset as u16, 0)); // Scroll vertically
+
                 frame.render_widget(paragraph, area);
             }
             None => {

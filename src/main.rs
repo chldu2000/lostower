@@ -103,7 +103,7 @@ fn handle_key_event(
                                         book.metadata.title = title;
                                     }
                                     state.load_book(book);
-                                    reader.current_line = 0; // Reset line when loading book
+                                    reader.scroll_offset = 0; // Reset scroll offset when loading book
                                 }
                             }
                         }
@@ -118,9 +118,7 @@ fn handle_key_event(
                 KeyCode::Char('h') => state.switch_view(View::Help),
                 KeyCode::Char('l') => state.switch_view(View::Library),
                 KeyCode::Down | KeyCode::Char('j') | KeyCode::PageDown => {
-                    if let Some(book) = &state.current_book {
-                        reader.scroll_down(book);
-                    }
+                    reader.scroll_down();
                 }
                 KeyCode::Up | KeyCode::Char('k') | KeyCode::PageUp => {
                     reader.scroll_up();
@@ -137,7 +135,7 @@ fn handle_key_event(
                                         let title = utils::path::file_name_without_extension(book_path);
                                         book.metadata.title = title;
                                         state.load_book(book);
-                                        reader.current_line = 0;
+                                        reader.scroll_offset = 0;
                                     }
                                 }
                             }
