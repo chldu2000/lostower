@@ -13,14 +13,15 @@ lostower is a terminal-based e-book reader (TUI application) written in Rust usi
 - **Basic TUI Framework**: Implemented using Ratatui and Crossterm
 - **Views**: Library (file browser), Reader (book display), and Help views fully implemented
 - **TXT File Support**: Full support with charset decoding (UTF-8, GB2312, GBK, GB18030)
+- **EPUB File Support**: Basic support (extracts and displays HTML content, no chapter navigation yet)
 - **Key Bindings**:
   - `q` - Quit
   - `h` - Show help
   - `l` - Library view
   - `r` - Reader view
   - In Library: `j/k` or arrows to navigate, Enter to open book
-  - In Reader: `j/k/PageUp/PageDown` for pages, `c` to cycle charset
-- **Dependencies**: ratatui, crossterm, anyhow, thiserror, encoding_rs
+  - In Reader: `j/k/PageUp/PageDown` for pages, `c` to cycle charset (TXT only)
+- **Dependencies**: ratatui, crossterm, anyhow, thiserror, encoding_rs, epub, html2text, zip
 
 ## Development Commands
 
@@ -182,18 +183,22 @@ src/
 
 **Verification**: Run the app, browse to a TXT file, open it, read and scroll through content. Press 'c' to cycle through charsets!
 
-#### Phase 3: EPUB Support
+#### Phase 3: EPUB Support (In Progress)
 
 **Goal**: Add support for reading EPUB files.
 
-- [ ] Add dependencies:
-  - `epub` crate for EPUB parsing
-  - `html2text` or similar for HTML to plain text conversion
+- [x] Add dependencies:
+  - [x] `epub` (2.0) crate for EPUB parsing
+  - [x] `html2text` (0.14) for HTML to plain text conversion
+  - [x] `zip` (0.6) for zip archive handling (used as backup)
 
-- [ ] Implement EPUB parser:
-  - [ ] `src/book/formats/epub.rs` - EPUB format parser
-  - [ ] Handle EPUB structure (container.xml, OPF, chapters)
-  - [ ] Convert HTML content to readable text
+- [x] Implement basic EPUB parser:
+  - [x] `src/book/formats/epub.rs` - Basic EPUB format parser
+  - [x] Handle zip archive structure of EPUB files
+  - [x] Extract and convert HTML/XHTML content to readable text
+  - [ ] Handle EPUB structure properly (container.xml, OPF)
+  - [ ] Extract metadata (title, author, etc.) from OPF
+  - [ ] Support for chapters/navigation
 
 - [ ] Enhance reader view:
   - [ ] Support for chapters/navigation
@@ -203,7 +208,9 @@ src/
   - [ ] Track current chapter
   - [ ] Chapter navigation
 
-**Verification**: Open an EPUB file, navigate through chapters, read content.
+**Current State**: Basic EPUB support is implemented - can open and read EPUB files by extracting all HTML content. Metadata extraction and chapter support not yet implemented.
+
+**Verification**: Open an EPUB file, read content. (Chapter navigation not yet available)
 
 #### Phase 4: MOBI Support
 
