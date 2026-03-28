@@ -821,6 +821,7 @@ dependencies = [
  "ratatui",
  "tempfile",
  "thiserror 1.0.69",
+ "xml",
  "zip 0.6.6",
 ]
 

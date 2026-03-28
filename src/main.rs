@@ -8,6 +8,7 @@ use crossterm::terminal::{
     LeaveAlternateScreen,
 };
 use ratatui::backend::CrosstermBackend;
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::Terminal;
 
 mod app;
@@ -18,6 +19,7 @@ mod utils;
 use app::{AppState, View};
 use tui::event::{Event, EventHandler};
 use tui::ui::{library::Library, reader::Reader, help::Help};
+use tui::components::status_bar::StatusBar;
 
 fn main() -> anyhow::Result<()> {
     // Setup terminal
@@ -42,7 +44,18 @@ fn main() -> anyhow::Result<()> {
         terminal.draw(|frame| {
             match state.current_view {
                 View::Library => Library::render(frame, &state, &mut library),
-                View::Reader => Reader::render(frame, &state, &mut reader),
+                View::Reader => {
+                    let layout = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([
+                            Constraint::Percentage(95),
+                            Constraint::Percentage(5),
+                        ])
+                        .split(frame.area());
+
+                    Reader::render(frame, &state, &mut reader, layout[0]);
+                    StatusBar::render(frame, &state, &reader, layout[1]);
+                },
                 View::Help => Help::render(frame, &state),
             }
         })?;
@@ -122,6 +135,12 @@ fn handle_key_event(
                 }
                 KeyCode::Up | KeyCode::Char('k') | KeyCode::PageUp => {
                     reader.scroll_up();
+                }
+                KeyCode::Char('n') => {
+                    reader.next_chapter(state);
+                }
+                KeyCode::Char('p') => {
+                    reader.previous_chapter();
                 }
                 KeyCode::Char('c') => {
                     state.cycle_charset();

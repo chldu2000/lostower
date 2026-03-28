@@ -8,6 +8,7 @@ use crate::app::AppState;
 pub struct Reader {
     pub scroll_offset: usize,
     pub last_known_height: u16,
+    pub current_chapter: usize,
 }
 
 impl Reader {
@@ -15,6 +16,7 @@ impl Reader {
         Self {
             scroll_offset: 0,
             last_known_height: 52, // Default with borders
+            current_chapter: 0,
         }
     }
 
@@ -43,8 +45,23 @@ impl Reader {
         }
     }
 
-    pub fn render(frame: &mut Frame, state: &AppState, reader: &mut Reader) {
-        let area = frame.area();
+    pub fn next_chapter(&mut self, state: &AppState) {
+        if let Some(book) = &state.current_book {
+            if self.current_chapter < book.content.chapter_count() - 1 {
+                self.current_chapter += 1;
+                self.scroll_offset = 0; // Reset scroll for new chapter
+            }
+        }
+    }
+
+    pub fn previous_chapter(&mut self) {
+        if self.current_chapter > 0 {
+            self.current_chapter -= 1;
+            self.scroll_offset = 0; // Reset scroll for new chapter
+        }
+    }
+
+    pub fn render(frame: &mut Frame, state: &AppState, reader: &mut Reader, area: ratatui::layout::Rect) {
         reader.last_known_height = area.height;
 
         let block = Block::default()
@@ -53,12 +70,27 @@ impl Reader {
 
         match &state.current_book {
             Some(book) => {
-                let paragraph = Paragraph::new(book.content.full_text.as_str())
-                    .block(block)
-                    .wrap(Wrap { trim: true })
-                    .scroll((reader.scroll_offset as u16, 0)); // Scroll vertically
+                let content = if book.content.chapters.len() > 1 {
+                    // If we have multiple chapters, display current chapter
+                    book.content.get_chapter(reader.current_chapter)
+                } else {
+                    // If only one chapter, display full text
+                    Some(&book.content.full_text[..])
+                };
 
-                frame.render_widget(paragraph, area);
+                if let Some(text) = content {
+                    let paragraph = Paragraph::new(text)
+                        .block(block)
+                        .wrap(Wrap { trim: true })
+                        .scroll((reader.scroll_offset as u16, 0)); // Scroll vertically
+
+                    frame.render_widget(paragraph, area);
+                } else {
+                    let paragraph = Paragraph::new("Chapter not found")
+                        .block(block)
+                        .wrap(Wrap { trim: true });
+                    frame.render_widget(paragraph, area);
+                }
             }
             None => {
                 let paragraph = Paragraph::new("No book loaded")

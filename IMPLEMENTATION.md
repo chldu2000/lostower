@@ -130,7 +130,7 @@ src/
 
 **Verification**: Run the app, browse to a TXT file, open it, read and scroll through content. Press 'c' to cycle through charsets!
 
-### Phase 3: EPUB Support (In Progress)
+### Phase 3: EPUB Support ✅
 
 **Goal**: Add support for reading EPUB files.
 
@@ -143,21 +143,21 @@ src/
   - [x] `src/book/formats/epub.rs` - Basic EPUB format parser
   - [x] Handle zip archive structure of EPUB files
   - [x] Extract and convert HTML/XHTML content to readable text
-  - [ ] Handle EPUB structure properly (container.xml, OPF)
-  - [ ] Extract metadata (title, author, etc.) from OPF
-  - [ ] Support for chapters/navigation
+  - [x] Handle EPUB structure properly (container.xml, OPF)
+  - [x] Extract metadata (title, author, etc.) from OPF
+  - [x] Support for chapters/navigation (parse OPF spine and manifest)
 
-- [ ] Enhance reader view:
-  - [ ] Support for chapters/navigation
-  - [ ] Better text formatting
+- [x] Enhance reader view:
+  - [x] Support for chapters/navigation
+  - [x] Better text formatting
 
-- [ ] Update app state:
-  - [ ] Track current chapter
-  - [ ] Chapter navigation
+- [x] Update app state:
+  - [x] Track current chapter (Reader struct now tracks current_chapter)
+  - [x] Chapter navigation (n/previous keys)
 
-**Current State**: Basic EPUB support is implemented - can open and read EPUB files by extracting all HTML content. Metadata extraction and chapter support not yet implemented.
+**Current State**: Full EPUB support implemented! Can open, read, and navigate EPUB files with chapters. Metadata extraction includes title and author.
 
-**Verification**: Open an EPUB file, read content. (Chapter navigation not yet available)
+**Verification**: Open an EPUB file, read content, use 'n' and 'p' keys to navigate chapters. Check status bar for chapter information!
 
 ### Phase 4: MOBI Support
 
