@@ -1,4 +1,5 @@
 use crate::book::{Book, Charset};
+use crate::app::settings::Settings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
@@ -12,6 +13,7 @@ pub struct AppState {
     pub should_quit: bool,
     pub current_book: Option<Book>,
     pub current_charset: Charset,
+    pub settings: Settings,
 }
 
 impl AppState {
@@ -21,6 +23,7 @@ impl AppState {
             should_quit: false,
             current_book: None,
             current_charset: Charset::Utf8,
+            settings: Settings::load(),
         }
     }
 

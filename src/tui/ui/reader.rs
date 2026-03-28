@@ -1,9 +1,11 @@
 use ratatui::{
+    layout::{Constraint, Layout},
     widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
 };
 
 use crate::app::AppState;
+use crate::tui::components::scrollbar::Scrollbar;
 
 pub struct Reader {
     pub scroll_offset: usize,
@@ -21,7 +23,7 @@ impl Reader {
     }
 
     // Calculate available lines in the terminal area (subtract borders)
-    fn calculate_lines_per_page(height: u16) -> usize {
+    pub fn calculate_lines_per_page(height: u16) -> usize {
         // Subtract 2 for top and bottom borders
         let available = height.saturating_sub(2);
         if available == 0 {
@@ -114,6 +116,13 @@ impl Reader {
     pub fn render(frame: &mut Frame, state: &AppState, reader: &mut Reader, area: ratatui::layout::Rect) {
         reader.last_known_height = area.height;
 
+        // Split area for content and scrollbar
+        let [content_area, scrollbar_area] = Layout::horizontal([
+            Constraint::Min(0),  // Content takes all available space except 1 for scrollbar
+            Constraint::Length(1),  // Scrollbar is 1 character wide
+        ])
+        .areas(area);
+
         let block = Block::default()
             .title("Reader")
             .borders(Borders::ALL);
@@ -134,19 +143,21 @@ impl Reader {
                         .wrap(Wrap { trim: true })
                         .scroll((reader.scroll_offset as u16, 0)); // Scroll vertically
 
-                    frame.render_widget(paragraph, area);
+                    frame.render_widget(paragraph, content_area);
+                    // Render scrollbar
+                    Scrollbar::render(frame, state, reader, scrollbar_area);
                 } else {
                     let paragraph = Paragraph::new("Chapter not found")
                         .block(block)
                         .wrap(Wrap { trim: true });
-                    frame.render_widget(paragraph, area);
+                    frame.render_widget(paragraph, content_area);
                 }
             }
             None => {
                 let paragraph = Paragraph::new("No book loaded")
                     .block(block)
                     .wrap(Wrap { trim: true });
-                frame.render_widget(paragraph, area);
+                frame.render_widget(paragraph, content_area);
             }
         }
     }

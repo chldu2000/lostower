@@ -159,7 +159,7 @@ src/
 
 **Verification**: Open an EPUB file, read content, use 'n' and 'p' keys to navigate chapters. Check status bar for chapter information!
 
-### Phase 4: MOBI Support
+### Phase 4: MOBI Support (SKIPPED)
 
 **Goal**: Add support for reading MOBI files.
 
@@ -179,11 +179,11 @@ src/
 
 **Goal**: Add user-friendly features and polish.
 
-- [ ] Implement scrollbar component:
-  - [ ] `src/tui/components/scrollbar.rs` - Visual scroll indicator
+- [x] Implement scrollbar component:
+  - [x] `src/tui/components/scrollbar.rs` - Visual scroll indicator
 
-- [ ] Add user settings:
-  - [ ] `src/app/settings.rs` - Persistent settings (theme, scroll speed, etc.)
+- [x] Add user settings:
+  - [x] `src/app/settings.rs` - Persistent settings (theme, scroll speed, etc.) with TOML config
 
 - [ ] Add search functionality:
   - [ ] Search within book content

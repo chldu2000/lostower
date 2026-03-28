@@ -21,7 +21,7 @@ lostower is a terminal-based e-book reader (TUI application) written in Rust usi
   - `r` - Reader view
   - In Library: `j/k` or arrows to navigate, Enter to open book
   - In Reader: `j/k/PageDown/Down` for pages, `c` to cycle charset (TXT only), `n` to next chapter, `p` to previous chapter
-- **Dependencies**: ratatui, crossterm, anyhow, thiserror, encoding_rs, epub, html2text, zip
+- **Dependencies**: ratatui, crossterm, anyhow, thiserror, encoding_rs, epub, html2text, zip, serde, toml, dirs
 
 ## Development Commands
 
@@ -71,7 +71,7 @@ src/
 ├── app/
 │   ├── mod.rs             # App module exports
 │   ├── state.rs           # Application state management (with book and charset tracking)
-│   └── settings.rs        # User settings and configuration (stub)
+│   └── settings.rs        # User settings and configuration (persistent TOML storage)
 ├── tui/
 │   ├── mod.rs             # TUI module exports
 │   ├── event.rs           # Event handling (keyboard, mouse, resize)
@@ -82,7 +82,7 @@ src/
 │   │   └── help.rs        # Help view (with charset info)
 │   └── components/
 │       ├── mod.rs         # Components module exports
-│       ├── scrollbar.rs   # Scrollbar component (stub)
+│       ├── scrollbar.rs   # Scrollbar component (implemented)
 │       └── status_bar.rs  # Status bar component (implemented)
 ├── book/
 │   ├── mod.rs             # Book module exports
@@ -212,7 +212,7 @@ src/
 
 **Verification**: Open an EPUB file, read content, use 'n' and 'p' keys to navigate chapters. Check status bar for book and chapter info!
 
-#### Phase 4: MOBI Support
+#### Phase 4: MOBI Support (SKIPPED)
 
 **Goal**: Add support for reading MOBI files.
 
@@ -232,11 +232,11 @@ src/
 
 **Goal**: Add user-friendly features and polish.
 
-- [ ] Implement scrollbar component:
-  - [ ] `src/tui/components/scrollbar.rs` - Visual scroll indicator
+- [x] Implement scrollbar component:
+  - [x] `src/tui/components/scrollbar.rs` - Visual scroll indicator
 
-- [ ] Add user settings:
-  - [ ] `src/app/settings.rs` - Persistent settings (theme, scroll speed, etc.)
+- [x] Add user settings:
+  - [x] `src/app/settings.rs` - Persistent settings (theme, scroll speed, etc.) with TOML config
 
 - [ ] Add search functionality:
   - [ ] Search within book content
