@@ -131,10 +131,10 @@ fn handle_key_event(
                 KeyCode::Char('h') => state.switch_view(View::Help),
                 KeyCode::Char('l') => state.switch_view(View::Library),
                 KeyCode::Down | KeyCode::Char('j') | KeyCode::PageDown => {
-                    reader.scroll_down();
+                    reader.scroll_down(&state);
                 }
                 KeyCode::Up | KeyCode::Char('k') | KeyCode::PageUp => {
-                    reader.scroll_up();
+                    reader.scroll_up(&state);
                 }
                 KeyCode::Char('n') => {
                     reader.next_chapter(state);

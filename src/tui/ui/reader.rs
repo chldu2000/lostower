@@ -31,17 +31,67 @@ impl Reader {
         }
     }
 
-    pub fn scroll_down(&mut self) {
+    pub fn scroll_down(&mut self, state: &AppState) {
         let lines_per_page = Self::calculate_lines_per_page(self.last_known_height);
-        self.scroll_offset += lines_per_page;
+
+        if let Some(book) = &state.current_book {
+            let current_content = if book.content.chapters.len() > 1 {
+                book.content.get_chapter(self.current_chapter)
+            } else {
+                Some(&book.content.full_text[..])
+            };
+
+            if let Some(text) = current_content {
+                // Calculate total lines in current content
+                let total_lines = text.split('\n').count();
+
+                // Calculate if we're at or near the end
+                let available_height = Self::calculate_lines_per_page(self.last_known_height);
+
+                // If scrolling further would go beyond the content
+                if self.scroll_offset + available_height >= total_lines {
+                    // If there's a next chapter, navigate to it
+                    if self.current_chapter < book.content.chapter_count() - 1 {
+                        self.current_chapter += 1;
+                        self.scroll_offset = 0;
+                    }
+                } else {
+                    // Otherwise, just scroll down
+                    self.scroll_offset += available_height;
+                }
+            } else {
+                // If no content, just scroll (shouldn't happen)
+                self.scroll_offset += lines_per_page;
+            }
+        } else {
+            self.scroll_offset += lines_per_page;
+        }
     }
 
-    pub fn scroll_up(&mut self) {
+    pub fn scroll_up(&mut self, state: &AppState) {
         let lines_per_page = Self::calculate_lines_per_page(self.last_known_height);
-        if lines_per_page > self.scroll_offset {
-            self.scroll_offset = 0;
-        } else {
-            self.scroll_offset -= lines_per_page;
+
+        if self.scroll_offset > 0 {
+            if lines_per_page > self.scroll_offset {
+                self.scroll_offset = 0;
+            } else {
+                self.scroll_offset -= lines_per_page;
+            }
+        } else if self.current_chapter > 0 {
+            // If at beginning of chapter and previous chapter exists
+            self.current_chapter -= 1;
+
+            // Scroll to end of previous chapter
+            if let Some(book) = &state.current_book {
+                let previous_content = book.content.get_chapter(self.current_chapter);
+                if let Some(text) = previous_content {
+                    let total_lines = text.split('\n').count();
+                    let available_height = Self::calculate_lines_per_page(self.last_known_height);
+                    self.scroll_offset = total_lines.saturating_sub(available_height);
+                } else {
+                    self.scroll_offset = 0;
+                }
+            }
         }
     }
 
