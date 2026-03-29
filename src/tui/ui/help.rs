@@ -1,6 +1,7 @@
 use ratatui::{
-    widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
+    style::Style,
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 use crate::app::AppState;
@@ -11,21 +12,37 @@ impl Help {
     pub fn render(frame: &mut Frame, state: &AppState) {
         let area = frame.area();
 
+        let fg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.foreground_color);
+        let bg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.background_color);
+        let style = Style::default().fg(fg).bg(bg);
+
         let block = Block::default()
             .title("Help")
-            .borders(Borders::ALL);
+            .borders(Borders::ALL)
+            .style(style);
 
         let help_text = [
             "Key Bindings:",
             "  q - Quit",
             "  h - Show this help",
             "  l - Library view",
-            "  r - Reader view",
+            "  m - Bookmarks view",
+            "  b - Add bookmark",
+            "  / - Start search",
+            "  n - Next search match",
+            "  p - Previous search match",
             "  c - Cycle charset (UTF-8 → GB2312 → GBK → GB18030)",
             "  j/PageDown/Down - Next page",
             "  k/PageUp/Up - Previous page",
             "  n - Next chapter",
             "  p - Previous chapter",
+            "  d - Delete bookmark (in bookmarks view)",
             "",
             &format!("Current Charset: {}", state.current_charset.name()),
             "",

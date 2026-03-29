@@ -185,18 +185,19 @@ src/
 - [x] Add user settings:
   - [x] `src/app/settings.rs` - Persistent settings (theme, scroll speed, etc.) with TOML config
 
-- [ ] Add search functionality:
-  - [ ] Search within book content
-  - [ ] Search results navigation
+- [x] Add search functionality:
+  - [x] Search within book content (press `/` to start search)
+  - [x] Search results navigation (`n` for next match, `p` for previous)
 
-- [ ] Add bookmarks:
-  - [ ] Save and load bookmarks
-  - [ ] Quick jump to bookmarks
+- [x] Add bookmarks:
+  - [x] Save and load bookmarks (persisted in settings)
+  - [x] Quick jump to bookmarks (`b` to add bookmark, `m` to open bookmarks view)
+  - [x] Delete bookmarks with `d` or Delete key
 
-- [ ] Improve UI/UX:
-  - [ ] Better key bindings
-  - [ ] Mouse support (optional)
-  - [ ] Theme customization
+- [x] Improve UI/UX:
+  - [x] Updated help with all key bindings
+  - [x] Theme customization (all colors configurable in settings.toml)
+  - [ ] Mouse support (optional) - left for future
 
 ## Key Design Decisions
 

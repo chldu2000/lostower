@@ -64,9 +64,21 @@ mod tests {
         let books = list_books_in_directory(&dir_path).expect("Failed to list books");
 
         assert_eq!(books.len(), 2);
-        assert!(books.iter().any(|p| p.to_str().unwrap().ends_with("test.txt")));
-        assert!(books.iter().any(|p| p.to_str().unwrap().ends_with("test.epub")));
-        assert!(!books.iter().any(|p| p.to_str().unwrap().ends_with("test.pdf")));
+        assert!(
+            books
+                .iter()
+                .any(|p| p.to_str().unwrap().ends_with("test.txt"))
+        );
+        assert!(
+            books
+                .iter()
+                .any(|p| p.to_str().unwrap().ends_with("test.epub"))
+        );
+        assert!(
+            !books
+                .iter()
+                .any(|p| p.to_str().unwrap().ends_with("test.pdf"))
+        );
     }
 
     #[test]

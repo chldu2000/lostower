@@ -110,7 +110,9 @@ impl EpubParser {
 
         for event in reader {
             match event {
-                Ok(xml::reader::XmlEvent::StartElement { name, attributes, .. }) => {
+                Ok(xml::reader::XmlEvent::StartElement {
+                    name, attributes, ..
+                }) => {
                     let local = name.local_name.as_str();
                     if local == "rootfiles" {
                         in_rootfiles = true;
@@ -188,9 +190,11 @@ impl EpubParser {
         }
     }
 
-    fn parse_spine_and_manifest_from_bytes(data: &[u8]) -> (Vec<String>, std::collections::HashMap<String, String>) {
-        use xml::reader::EventReader;
+    fn parse_spine_and_manifest_from_bytes(
+        data: &[u8],
+    ) -> (Vec<String>, std::collections::HashMap<String, String>) {
         use std::collections::HashMap;
+        use xml::reader::EventReader;
 
         let reader = EventReader::new(data);
         let mut spine = Vec::new();
@@ -200,7 +204,9 @@ impl EpubParser {
 
         for event in reader {
             match event {
-                Ok(xml::reader::XmlEvent::StartElement { name, attributes, .. }) => {
+                Ok(xml::reader::XmlEvent::StartElement {
+                    name, attributes, ..
+                }) => {
                     let local = name.local_name.as_str();
 
                     match local {
@@ -214,7 +220,7 @@ impl EpubParser {
                                     break;
                                 }
                             }
-                        },
+                        }
                         "item" if in_manifest => {
                             // Extract id and href from item
                             let mut id = None;
@@ -238,15 +244,18 @@ impl EpubParser {
                                     }
                                 } else {
                                     // If no media-type specified, check file extension
-                                    if item_href.ends_with(".html") || item_href.ends_with(".xhtml") || item_href.ends_with(".htm") {
+                                    if item_href.ends_with(".html")
+                                        || item_href.ends_with(".xhtml")
+                                        || item_href.ends_with(".htm")
+                                    {
                                         manifest.insert(item_id, item_href);
                                     }
                                 }
                             }
-                        },
+                        }
                         _ => {}
                     }
-                },
+                }
                 Ok(xml::reader::XmlEvent::EndElement { name, .. }) => {
                     let local = name.local_name.as_str();
                     if local == "spine" {
@@ -254,7 +263,7 @@ impl EpubParser {
                     } else if local == "manifest" {
                         in_manifest = false;
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -262,7 +271,10 @@ impl EpubParser {
         (spine, manifest)
     }
 
-    fn extract_all_html_content(zip: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>, _opf_dir: &str) -> Vec<String> {
+    fn extract_all_html_content(
+        zip: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>,
+        _opf_dir: &str,
+    ) -> Vec<String> {
         let mut content = Vec::new();
         for i in 0..zip.len() {
             if let Ok(mut file) = zip.by_index(i) {

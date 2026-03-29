@@ -15,7 +15,11 @@ pub struct BookMetadata {
 
 impl BookMetadata {
     pub fn new(title: String, author: String, format: String) -> Self {
-        Self { title, author, format }
+        Self {
+            title,
+            author,
+            format,
+        }
     }
 }
 
@@ -56,7 +60,8 @@ impl BookContent {
     pub fn pages_for_height(&self, lines_per_page: usize) -> Vec<String> {
         let lines: Vec<&str> = self.full_text.split('\n').collect();
 
-        lines.chunks(lines_per_page)
+        lines
+            .chunks(lines_per_page)
             .map(|chunk| chunk.join("\n"))
             .collect()
     }
@@ -97,8 +102,16 @@ impl BookContent {
 
     // Get start and end character offsets for a chapter
     pub fn chapter_boundaries(&self, chapter_index: usize) -> (usize, usize) {
-        let start = self.chapter_offsets.get(chapter_index).copied().unwrap_or(0);
-        let end = self.chapter_offsets.get(chapter_index + 1).copied().unwrap_or(self.full_text.len());
+        let start = self
+            .chapter_offsets
+            .get(chapter_index)
+            .copied()
+            .unwrap_or(0);
+        let end = self
+            .chapter_offsets
+            .get(chapter_index + 1)
+            .copied()
+            .unwrap_or(self.full_text.len());
         (start, end)
     }
 
@@ -106,7 +119,8 @@ impl BookContent {
     pub fn pages_for_chapter(&self, chapter_index: usize, lines_per_page: usize) -> Vec<String> {
         if let Some(chapter) = self.chapters.get(chapter_index) {
             let lines: Vec<&str> = chapter.split('\n').collect();
-            lines.chunks(lines_per_page)
+            lines
+                .chunks(lines_per_page)
                 .map(|chunk| chunk.join("\n"))
                 .collect()
         } else {
@@ -118,7 +132,8 @@ impl BookContent {
     pub fn page_count_for_chapter(&self, chapter_index: usize, lines_per_page: usize) -> usize {
         if let Some(chapter) = self.chapters.get(chapter_index) {
             let lines: Vec<&str> = chapter.split('\n').collect();
-            let (quotient, remainder) = (lines.len() / lines_per_page, lines.len() % lines_per_page);
+            let (quotient, remainder) =
+                (lines.len() / lines_per_page, lines.len() % lines_per_page);
             quotient + if remainder > 0 { 1 } else { 0 }
         } else {
             0
@@ -128,7 +143,12 @@ impl BookContent {
 
 impl fmt::Display for BookContent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} characters, {} chapters", self.full_text.len(), self.chapters.len())
+        write!(
+            f,
+            "{} characters, {} chapters",
+            self.full_text.len(),
+            self.chapters.len()
+        )
     }
 }
 

@@ -88,7 +88,10 @@ impl TxtParser {
     fn decode_content(&self, content: &[u8]) -> String {
         let (cow, _, had_errors) = self.charset.encoding_label().decode(content);
         if had_errors {
-            eprintln!("Warning: Some characters could not be decoded with {}", self.charset.name());
+            eprintln!(
+                "Warning: Some characters could not be decoded with {}",
+                self.charset.name()
+            );
         }
         cow.to_string()
     }
@@ -102,7 +105,9 @@ mod tests {
     fn test_txt_parser_basic_utf8() {
         let parser = TxtParser::new();
         let test_content = b"Line 1\nLine 2\nLine 3";
-        let book = parser.parse(test_content).expect("Failed to parse TXT content");
+        let book = parser
+            .parse(test_content)
+            .expect("Failed to parse TXT content");
 
         assert_eq!(book.metadata.format, "txt");
     }
@@ -117,7 +122,9 @@ mod tests {
         let joined_content = test_content.join("\n");
         let test_content_bytes = joined_content.as_bytes();
 
-        let book = parser.parse(test_content_bytes).expect("Failed to parse TXT content");
+        let book = parser
+            .parse(test_content_bytes)
+            .expect("Failed to parse TXT content");
 
         // Test different page heights
         assert_eq!(book.content.page_count_for_height(50), 2); // 100 lines / 50 lines per page
@@ -130,7 +137,9 @@ mod tests {
     fn test_txt_parser_empty_content() {
         let parser = TxtParser::new();
         let test_content = b"";
-        let book = parser.parse(test_content).expect("Failed to parse TXT content");
+        let book = parser
+            .parse(test_content)
+            .expect("Failed to parse TXT content");
 
         assert_eq!(book.content.full_text, "");
     }
@@ -149,7 +158,9 @@ mod tests {
         assert_eq!(parser.charset(), Charset::Gbk);
 
         let test_content = b"Test content";
-        let book = parser.parse(test_content).expect("Failed to parse with GBK charset");
+        let book = parser
+            .parse(test_content)
+            .expect("Failed to parse with GBK charset");
         assert_eq!(book.metadata.format, "txt");
     }
 }

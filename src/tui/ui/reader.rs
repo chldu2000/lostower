@@ -1,16 +1,27 @@
 use ratatui::{
-    layout::{Constraint, Layout},
-    widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
+    layout::{Constraint, Layout},
+    style::{Color, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 use crate::app::AppState;
 use crate::tui::components::scrollbar::Scrollbar;
 
+#[derive(Debug, Clone, Default)]
+pub struct SearchState {
+    pub active: bool,
+    pub query: String,
+    pub matches: Vec<(usize, usize)>, // (line index, start column)
+    pub current_match_index: usize,
+}
+
 pub struct Reader {
     pub scroll_offset: usize,
     pub last_known_height: u16,
     pub current_chapter: usize,
+    pub search: SearchState,
 }
 
 impl Reader {
@@ -19,6 +30,7 @@ impl Reader {
             scroll_offset: 0,
             last_known_height: 52, // Default with borders
             current_chapter: 0,
+            search: SearchState::default(),
         }
     }
 
@@ -113,19 +125,125 @@ impl Reader {
         }
     }
 
-    pub fn render(frame: &mut Frame, state: &AppState, reader: &mut Reader, area: ratatui::layout::Rect) {
+    pub fn start_search(&mut self) {
+        self.search.active = true;
+        self.search.query.clear();
+        self.search.matches.clear();
+        self.search.current_match_index = 0;
+    }
+
+    pub fn cancel_search(&mut self) {
+        self.search.active = false;
+        self.search.query.clear();
+        self.search.matches.clear();
+        self.search.current_match_index = 0;
+    }
+
+    pub fn update_search(&mut self, state: &AppState) {
+        self.search.matches.clear();
+        if self.search.query.is_empty() {
+            return;
+        }
+
+        if let Some(book) = &state.current_book {
+            let content = if book.content.chapters.len() > 1 {
+                book.content.get_chapter(self.current_chapter)
+            } else {
+                Some(&book.content.full_text[..])
+            };
+
+            if let Some(text) = content {
+                let query_lower = self.search.query.to_lowercase();
+                for (line_idx, line) in text.split('\n').enumerate() {
+                    let line_lower = line.to_lowercase();
+                    let mut start = 0;
+                    while let Some(pos) = line_lower[start..].find(&query_lower) {
+                        let absolute_pos = start + pos;
+                        self.search.matches.push((line_idx, absolute_pos));
+                        start = absolute_pos + query_lower.len();
+                    }
+                }
+            }
+        }
+
+        if !self.search.matches.is_empty() {
+            self.jump_to_current_match();
+        }
+    }
+
+    pub fn jump_to_current_match(&mut self) {
+        if let Some(&(line_idx, _)) = self.search.matches.get(self.search.current_match_index) {
+            let available_height = Self::calculate_lines_per_page(self.last_known_height);
+            // Calculate scroll offset so that the matched line is visible
+            if line_idx >= self.scroll_offset && line_idx < self.scroll_offset + available_height {
+                // Already visible, no need to scroll
+            } else if line_idx < available_height / 2 {
+                self.scroll_offset = 0;
+            } else {
+                // Center the match vertically
+                self.scroll_offset = line_idx.saturating_sub(available_height / 2);
+            }
+        }
+    }
+
+    pub fn next_match(&mut self, _state: &AppState) {
+        if self.search.matches.is_empty() {
+            return;
+        }
+        self.search.current_match_index =
+            (self.search.current_match_index + 1) % self.search.matches.len();
+        self.jump_to_current_match();
+    }
+
+    pub fn previous_match(&mut self, _state: &AppState) {
+        if self.search.matches.is_empty() {
+            return;
+        }
+        if self.search.current_match_index == 0 {
+            self.search.current_match_index = self.search.matches.len() - 1;
+        } else {
+            self.search.current_match_index -= 1;
+        }
+        self.jump_to_current_match();
+    }
+
+    pub fn render(
+        frame: &mut Frame,
+        state: &AppState,
+        reader: &mut Reader,
+        area: ratatui::layout::Rect,
+    ) {
         reader.last_known_height = area.height;
 
         // Split area for content and scrollbar
         let [content_area, scrollbar_area] = Layout::horizontal([
-            Constraint::Min(0),  // Content takes all available space except 1 for scrollbar
-            Constraint::Length(1),  // Scrollbar is 1 character wide
+            Constraint::Min(0),    // Content takes all available space except 1 for scrollbar
+            Constraint::Length(1), // Scrollbar is 1 character wide
         ])
         .areas(area);
 
+        let mut title = "Reader".to_string();
+        if reader.search.active {
+            title.push_str(&format!(
+                " - Search: \"{}\" ({} matches)",
+                reader.search.query,
+                reader.search.matches.len()
+            ));
+        }
+
+        let fg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.foreground_color);
+        let bg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.background_color);
+
         let block = Block::default()
-            .title("Reader")
-            .borders(Borders::ALL);
+            .title(title.as_str())
+            .borders(Borders::ALL)
+            .style(Style::default().fg(fg).bg(bg));
 
         match &state.current_book {
             Some(book) => {
@@ -138,7 +256,72 @@ impl Reader {
                 };
 
                 if let Some(text) = content {
-                    let paragraph = Paragraph::new(text)
+                    let mut lines: Vec<Line> = Vec::new();
+                    let query_len = reader.search.query.len();
+
+                    let fg = state
+                        .settings
+                        .theme
+                        .parse_color(&state.settings.theme.foreground_color);
+                    let bg = state
+                        .settings
+                        .theme
+                        .parse_color(&state.settings.theme.background_color);
+                    let base_style = Style::default().fg(fg).bg(bg);
+
+                    for (line_idx, line_str) in text.split('\n').enumerate() {
+                        if !reader.search.active
+                            || reader.search.matches.is_empty()
+                            || query_len == 0
+                        {
+                            lines.push(Line::from(Span::styled(line_str, base_style)));
+                            continue;
+                        }
+
+                        // Find matches on this line
+                        let mut spans = Vec::new();
+                        let mut current_pos = 0;
+
+                        for &(match_line, match_col) in &reader.search.matches {
+                            if match_line != line_idx {
+                                continue;
+                            }
+                            if match_col >= current_pos {
+                                // Add text before the match
+                                if match_col > current_pos {
+                                    spans.push(Span::styled(
+                                        &line_str[current_pos..match_col],
+                                        base_style,
+                                    ));
+                                }
+                                // Add highlighted match
+                                let end = match_col + query_len;
+                                let is_current = reader.search.matches
+                                    [reader.search.current_match_index]
+                                    == (match_line, match_col);
+                                let style = if is_current {
+                                    Style::default().bg(Color::Yellow).fg(Color::Black)
+                                } else {
+                                    Style::default().bg(Color::LightYellow).fg(Color::Black)
+                                };
+                                spans.push(Span::styled(&line_str[match_col..end], style));
+                                current_pos = end;
+                            }
+                        }
+
+                        // Add remaining text after last match
+                        if current_pos < line_str.len() {
+                            spans.push(Span::styled(&line_str[current_pos..], base_style));
+                        }
+
+                        if spans.is_empty() {
+                            spans.push(Span::styled(line_str, base_style));
+                        }
+
+                        lines.push(Line::from(spans));
+                    }
+
+                    let paragraph = Paragraph::new(lines)
                         .block(block)
                         .wrap(Wrap { trim: true })
                         .scroll((reader.scroll_offset as u16, 0)); // Scroll vertically

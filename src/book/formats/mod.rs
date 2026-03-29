@@ -1,3 +1,3 @@
-pub mod txt;
 pub mod epub;
 pub mod mobi;
+pub mod txt;

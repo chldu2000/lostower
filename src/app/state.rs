@@ -1,11 +1,12 @@
-use crate::book::{Book, Charset};
 use crate::app::settings::Settings;
+use crate::book::{Book, Charset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
     Library,
     Reader,
     Help,
+    Bookmarks,
 }
 
 pub struct AppState {

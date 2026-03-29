@@ -1,6 +1,7 @@
 use ratatui::{
-    widgets::{Block, Borders, List, ListItem, ListState},
     Frame,
+    style::Style,
+    widgets::{Block, Borders, List, ListItem, ListState},
 };
 
 use std::path::PathBuf;
@@ -65,27 +66,42 @@ impl Library {
     }
 
     pub fn get_selected_book(&self) -> Option<&PathBuf> {
-        self.list_state.selected().and_then(|i| self.book_files.get(i))
+        self.list_state
+            .selected()
+            .and_then(|i| self.book_files.get(i))
     }
 
-    pub fn render(frame: &mut Frame, _state: &AppState, library: &mut Library) {
+    pub fn render(frame: &mut Frame, state: &AppState, library: &mut Library) {
         let area = frame.area();
 
-        let block = Block::default()
-            .title(format!("Library - {}", library.current_dir.to_string_lossy()))
-            .borders(Borders::ALL);
+        let fg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.foreground_color);
+        let bg = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.background_color);
+        let style = Style::default().fg(fg).bg(bg);
 
-        let items: Vec<ListItem> = library.book_files
+        let block = Block::default()
+            .title(format!(
+                "Library - {}",
+                library.current_dir.to_string_lossy()
+            ))
+            .borders(Borders::ALL)
+            .style(style);
+
+        let items: Vec<ListItem> = library
+            .book_files
             .iter()
             .map(|path| {
                 let name = crate::utils::path::file_name_without_extension(path);
-                ListItem::new(name)
+                ListItem::new(name).style(style)
             })
             .collect();
 
-        let list = List::new(items)
-            .block(block)
-            .highlight_symbol("> ");
+        let list = List::new(items).block(block).highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut library.list_state);
     }

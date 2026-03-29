@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::Rect,
-    style::{Color, Style},
+    style::Style,
     symbols::scrollbar,
     widgets::{Scrollbar as RatatuiScrollbar, ScrollbarOrientation, ScrollbarState},
-    Frame,
 };
 
 use crate::app::AppState;
@@ -39,17 +39,24 @@ impl Scrollbar {
 
         // Calculate scrollbar state
         let content_length = total_lines.saturating_sub(available_height);
-        let mut scrollbar_state = ScrollbarState::new(content_length)
-            .position(reader.scroll_offset);
+        let mut scrollbar_state =
+            ScrollbarState::new(content_length).position(reader.scroll_offset);
 
+        let track_color = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.scrollbar_track);
+        let thumb_color = state
+            .settings
+            .theme
+            .parse_color(&state.settings.theme.scrollbar_thumb);
         let scrollbar = RatatuiScrollbar::new(ScrollbarOrientation::VerticalLeft)
             .symbols(scrollbar::VERTICAL)
             .begin_symbol(None)
             .end_symbol(None)
-            .track_style(Style::default().fg(Color::DarkGray))
-            .thumb_style(Style::default().fg(Color::White));
+            .track_style(Style::default().fg(track_color))
+            .thumb_style(Style::default().fg(thumb_color));
 
         frame.render_stateful_widget(scrollbar, area, &mut scrollbar_state);
     }
 }
-

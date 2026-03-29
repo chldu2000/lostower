@@ -1,6 +1,4 @@
-use crossterm::event::{
-    self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent,
-};
+use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -42,7 +40,9 @@ impl EventHandler {
                 }
 
                 if last_tick.elapsed() >= tick_rate {
-                    event_sender.send(Event::Tick).expect("failed to send tick event");
+                    event_sender
+                        .send(Event::Tick)
+                        .expect("failed to send tick event");
                     last_tick = Instant::now();
                 }
             }

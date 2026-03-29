@@ -1,11 +1,21 @@
+use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Bookmark {
+    pub book_path: String,
+    pub chapter: usize,
+    pub scroll_offset: usize,
+    pub title: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
     pub theme: ThemeSettings,
     pub scrolling: ScrollingSettings,
+    pub bookmarks: Vec<Bookmark>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,11 +56,32 @@ impl Default for ScrollingSettings {
     }
 }
 
+impl ThemeSettings {
+    /// Parse a color string to ratatui Color
+    pub fn parse_color(&self, color_str: &str) -> Color {
+        match color_str.to_lowercase().as_str() {
+            "black" => Color::Black,
+            "red" => Color::Red,
+            "green" => Color::Green,
+            "yellow" => Color::Yellow,
+            "blue" => Color::Blue,
+            "magenta" => Color::Magenta,
+            "cyan" => Color::Cyan,
+            "white" => Color::White,
+            "gray" => Color::Gray,
+            "darkgray" => Color::DarkGray,
+            "lightgray" => Color::Gray,
+            "lightyellow" => Color::LightYellow,
+            _ => Color::White, // default to white if unknown
+        }
+    }
+}
+
 impl Settings {
     /// Get the path to the settings file
     fn settings_path() -> anyhow::Result<PathBuf> {
-        let config_dir = dirs::config_dir()
-            .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?;
+        let config_dir =
+            dirs::config_dir().ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?;
         let app_dir = config_dir.join("lostower");
         fs::create_dir_all(&app_dir)?;
         Ok(app_dir.join("settings.toml"))
@@ -83,4 +114,3 @@ impl Settings {
         Ok(())
     }
 }
-
